@@ -1,13 +1,21 @@
-package user
+package users
 
 import (
-	"context"
 	"errors"
-	"time"
-	"net/http"
+	"vanilla-florist/helpers"
 )
 
-func SignUp(user User) (User, error) {
+type UserUseCase struct {
+	repo UserRepoInterface
+}
+
+func NewUseCase(userRepo UserRepoInterface) UserUseCaseInterface {
+	return &UserUseCase{
+		repo: userRepo,
+	}
+}
+
+func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
 	if user.Email == "" {
 		return User{}, errors.New("Email empty")
 	}
@@ -20,7 +28,7 @@ func SignUp(user User) (User, error) {
 
 	user.Password = hash
 
-	userRepo, err := userUseCase.repo.SignUp(user, ctx)
+	userRepo, err := userUseCase.repo.SignUp(user)
 
 	if err != nil {
 		return User{}, err
