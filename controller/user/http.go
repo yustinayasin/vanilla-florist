@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	users "vanilla-florist/business/user"
@@ -31,27 +34,49 @@ func (controller *UserController) SignUp(res http.ResponseWriter, req *http.Requ
 		}`)
 
 		utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+		return
 	}
 
-	var userSignup request.UserLogin
+	var userSignup request.UserEdit
 
-	payload := req.Body
+	// Read the request body
+	bodyBytes, err := ioutil.ReadAll(req.Body)
 
-	//defer ensure req.Body.Close() will be executed after the AddMovie or schedule a function
-	defer req.Body.Close()
+	if err != nil {
+		// Handle error
+		HandlerMessage := []byte(`{
+		"success": false,
+		"message": "Error read request body",
+		}`)
 
-	// parse the movie data into json format
-	err := json.NewDecoder(payload).Decode(&userSignup)
+		utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+		return
+	}
+
+	// Create a new io.ReadCloser with the same content
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// Now you can use req.Body for further processing
+
+	// Print the content for debugging
+	fmt.Println("Request Body:", string(bodyBytes))
+
+	// parse the user data into json format
+	err = json.NewDecoder(req.Body).Decode(&userSignup)
 
 	if err != nil {
 		// Add the response return message
 		HandlerMessage := []byte(`{
 		"success": false,
-		"message": "Error parsing the movie data",
+		"message": "Error parsing the user data",
 		}`)
 
 		utils.ReturnJsonResponse(res, http.StatusInternalServerError, HandlerMessage)
+		return
 	}
+
+	//defer ensure req.Body.Close() will be executed after the AddMovie or schedule a function
+	defer req.Body.Close()
 
 	_, errRepo := controller.usecase.SignUp(*userSignup.ToUsecase())
 
@@ -62,6 +87,7 @@ func (controller *UserController) SignUp(res http.ResponseWriter, req *http.Requ
 		}`)
 
 		utils.ReturnJsonResponse(res, http.StatusInternalServerError, HandlerMessage)
+		return
 	}
 
 	// Add the response return message
@@ -71,4 +97,5 @@ func (controller *UserController) SignUp(res http.ResponseWriter, req *http.Requ
 	 }`)
 
 	utils.ReturnJsonResponse(res, http.StatusCreated, HandlerMessage)
+	return
 }

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"vanilla-florist/helpers"
 
 	userUsecase "vanilla-florist/business/user"
 	userController "vanilla-florist/controller/user"
@@ -14,17 +15,14 @@ import (
 )
 
 func main() {
-	//connection
-	connStr := "user=postgres dbname=florist password=postgres sslmode=disable"
-
-	db, err := sql.Open("postgres", connStr)
+	db, err := helpers.NewDatabase()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//check if the connection work
-	pingErr := db.Ping()
+	pingErr := db.DB.Ping()
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
@@ -36,4 +34,13 @@ func main() {
 	userControllerInterface := userController.NewUserController(userUseCaseInterface)
 
 	http.HandleFunc("/user/add", userControllerInterface.SignUp)
+
+	// listen port
+	err = http.ListenAndServe(":3000", nil)
+
+	// print any server-based error messages
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

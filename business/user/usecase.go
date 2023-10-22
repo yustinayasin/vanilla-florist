@@ -16,6 +16,10 @@ func NewUseCase(userRepo UserRepoInterface) UserUseCaseInterface {
 }
 
 func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
+	if user.Name == "" {
+		return User{}, errors.New("Name empty")
+	}
+
 	if user.Email == "" {
 		return User{}, errors.New("Email empty")
 	}
