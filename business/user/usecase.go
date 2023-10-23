@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	"fmt"
 	"vanilla-florist/helpers"
 )
 
@@ -36,6 +37,31 @@ func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
 
 	if err != nil {
 		return User{}, err
+	}
+
+	return userRepo, nil
+}
+
+func (userUseCase *UserUseCase) Login(user User) (User, error) {
+	if user.Email == "" {
+		return User{}, errors.New("Email cannot be empty")
+	}
+
+	if user.Password == "" {
+		return User{}, errors.New("Password cannot be empty")
+	}
+
+	userRepo, err := userUseCase.repo.Login(user)
+
+	if err != nil {
+		fmt.Println(err)
+		return User{}, err
+	}
+
+	match := helpers.CheckPasswordHash(user.Password, userRepo.Password)
+
+	if match != true {
+		return User{}, errors.New("Password doesn't match")
 	}
 
 	return userRepo, nil

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	users "vanilla-florist/business/user"
@@ -39,6 +40,34 @@ func (repo *UserRepository) SignUp(user users.User) (users.User, error) {
 	if err != nil {
 		fmt.Println("Error in repo: ", err)
 		return users.User{}, err
+	}
+
+	return userDB.ToUsecase(), nil
+}
+
+func (repo *UserRepository) Login(user users.User) (users.User, error) {
+	userDB := FromUsecase(user)
+
+	//connection database
+	db, err := helpers.NewDatabase()
+
+	if err != nil {
+		return users.User{}, err
+	}
+
+	if db == nil {
+		fmt.Println("Database connection is nil")
+		return users.User{}, errors.New("database connection is nil")
+	}
+
+	row := db.DB.QueryRow("SELECT * FROM users WHERE email = $1", user.Email)
+
+	//scan jumlah kolom harus sama dan urut
+	if err := row.Scan(&userDB.Name, &userDB.Email, &userDB.Password, &userDB.Id); err != nil {
+		if err == sql.ErrNoRows {
+			return users.User{}, errors.New("User not found")
+		}
+		return users.User{}, errors.New("Error in database")
 	}
 
 	return userDB.ToUsecase(), nil

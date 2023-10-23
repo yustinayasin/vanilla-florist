@@ -33,7 +33,8 @@ func main() {
 	userUseCaseInterface := userUsecase.NewUseCase(userRepoInterface)
 	userControllerInterface := userController.NewUserController(userUseCaseInterface)
 
-	http.HandleFunc("/user/add", userControllerInterface.SignUp)
+	http.HandleFunc("/signup", userControllerInterface.SignUp)
+	http.HandleFunc("/login", userControllerInterface.Login)
 
 	// listen port
 	err = http.ListenAndServe(":3000", nil)

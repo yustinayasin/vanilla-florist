@@ -9,8 +9,10 @@ type User struct {
 
 type UserUseCaseInterface interface {
 	SignUp(user User) (User, error)
+	Login(user User) (User, error)
 }
 
 type UserRepoInterface interface {
 	SignUp(user User) (User, error)
+	Login(user User) (User, error)
 }
