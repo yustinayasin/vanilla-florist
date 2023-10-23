@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	users "vanilla-florist/business/user"
 	"vanilla-florist/helpers"
 )
@@ -71,4 +72,35 @@ func (repo *UserRepository) Login(user users.User) (users.User, error) {
 	}
 
 	return userDB.ToUsecase(), nil
+}
+
+func (repo *UserRepository) EditUser(user users.User, id int) (users.User, error) {
+	userDB := FromUsecase(user)
+	var newUser User
+	//connection database
+	db, err := helpers.NewDatabase()
+
+	if err != nil {
+		return users.User{}, err
+	}
+
+	if db == nil {
+		fmt.Println("Database connection is nil")
+		return users.User{}, errors.New("database connection is nil")
+	}
+
+	_, err = db.DB.Exec("UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4", userDB.Name, userDB.Email, userDB.Password, id)
+
+	if err != nil {
+		fmt.Println("Error in repo: ", err)
+		return users.User{}, err
+	}
+
+	err = db.DB.QueryRow("SELECT id, name, email FROM users WHERE id = $1", id).Scan(&newUser.Id, &newUser.Name, &newUser.Email)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return newUser.ToUsecase(), nil
 }

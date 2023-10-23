@@ -66,3 +66,32 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 
 	return userRepo, nil
 }
+
+func (userUseCase *UserUseCase) EditUser(user User, id int) (User, error) {
+	if id == 0 {
+		return User{}, errors.New("User ID empty")
+	}
+
+	if user.Name == "" {
+		return User{}, errors.New("Name empty")
+	}
+
+	if user.Email == "" {
+		return User{}, errors.New("Email empty")
+	}
+
+	if user.Password == "" {
+		return User{}, errors.New("Password empty")
+	}
+
+	hash, _ := helpers.HashPassword(user.Password)
+	user.Password = hash
+
+	userRepo, err := userUseCase.repo.EditUser(user, id)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	return userRepo, nil
+}

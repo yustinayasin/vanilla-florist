@@ -11,6 +11,7 @@ import (
 	userController "vanilla-florist/controller/user"
 	userRepo "vanilla-florist/drivers/databases/user"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -33,11 +34,14 @@ func main() {
 	userUseCaseInterface := userUsecase.NewUseCase(userRepoInterface)
 	userControllerInterface := userController.NewUserController(userUseCaseInterface)
 
-	http.HandleFunc("/signup", userControllerInterface.SignUp)
-	http.HandleFunc("/login", userControllerInterface.Login)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/user/signup", userControllerInterface.SignUp)
+	r.HandleFunc("/user/login", userControllerInterface.Login)
+	r.HandleFunc("/user/edit/{id}", userControllerInterface.EditUser)
 
 	// listen port
-	err = http.ListenAndServe(":3000", nil)
+	err = http.ListenAndServe(":3000", r)
 
 	// print any server-based error messages
 	if err != nil {
