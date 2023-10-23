@@ -243,3 +243,41 @@ func (controller *UserController) EditUser(res http.ResponseWriter, req *http.Re
 	utils.ReturnJsonResponse(res, http.StatusCreated, HandlerMessage)
 	return
 }
+
+func (controller *UserController) DeleteUser(res http.ResponseWriter, req *http.Request) {
+	// check the method
+	if req.Method != "DELETE" {
+		// Add the response return message
+		HandlerMessage := []byte(`{
+		"success": false,
+		"message": "Check your HTTP method: Invalid HTTP method executed",
+		}`)
+
+		utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+		return
+	}
+
+	vars := mux.Vars(req)
+	id := vars["id"]
+	userId, _ := strconv.Atoi(id)
+
+	_, errRepo := controller.usecase.DeleteUser(userId)
+
+	if errRepo != nil {
+		HandlerMessage := []byte(`{
+		"success": false,
+		"message": "User not found",
+		}`)
+
+		utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+		return
+	}
+
+	HandlerMessage := []byte(`{
+		"success": true,
+		"message": "User was successfully deleted",
+	}`)
+
+	utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+	return
+}

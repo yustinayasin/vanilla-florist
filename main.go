@@ -39,6 +39,7 @@ func main() {
 	r.HandleFunc("/user/signup", userControllerInterface.SignUp)
 	r.HandleFunc("/user/login", userControllerInterface.Login)
 	r.HandleFunc("/user/edit/{id}", userControllerInterface.EditUser)
+	r.HandleFunc("/user/delete/{id}", userControllerInterface.DeleteUser)
 
 	// listen port
 	err = http.ListenAndServe(":3000", r)

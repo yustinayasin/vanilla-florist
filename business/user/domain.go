@@ -11,10 +11,12 @@ type UserUseCaseInterface interface {
 	SignUp(user User) (User, error)
 	Login(user User) (User, error)
 	EditUser(user User, id int) (User, error)
+	DeleteUser(id int) (User, error)
 }
 
 type UserRepoInterface interface {
 	SignUp(user User) (User, error)
 	Login(user User) (User, error)
 	EditUser(user User, id int) (User, error)
+	DeleteUser(id int) (User, error)
 }

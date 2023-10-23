@@ -76,7 +76,9 @@ func (repo *UserRepository) Login(user users.User) (users.User, error) {
 
 func (repo *UserRepository) EditUser(user users.User, id int) (users.User, error) {
 	userDB := FromUsecase(user)
+
 	var newUser User
+
 	//connection database
 	db, err := helpers.NewDatabase()
 
@@ -103,4 +105,29 @@ func (repo *UserRepository) EditUser(user users.User, id int) (users.User, error
 	}
 
 	return newUser.ToUsecase(), nil
+}
+
+func (repo *UserRepository) DeleteUser(id int) (users.User, error) {
+	var userDb User
+
+	//connection database
+	db, err := helpers.NewDatabase()
+
+	if err != nil {
+		return users.User{}, err
+	}
+
+	if db == nil {
+		fmt.Println("Database connection is nil")
+		return users.User{}, errors.New("database connection is nil")
+	}
+
+	_, err = db.DB.Exec("DELETE FROM users WHERE ID = $1", id)
+
+	//kalo ngecek ga ada id kayak gitu pake result kah?
+	if err != nil {
+		return users.User{}, err
+	}
+
+	return userDb.ToUsecase(), nil
 }

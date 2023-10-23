@@ -95,3 +95,17 @@ func (userUseCase *UserUseCase) EditUser(user User, id int) (User, error) {
 
 	return userRepo, nil
 }
+
+func (userUseCase *UserUseCase) DeleteUser(id int) (User, error) {
+	if id == 0 {
+		return User{}, errors.New("User ID empty")
+	}
+
+	userRepo, err := userUseCase.repo.DeleteUser(id)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	return userRepo, nil
+}
