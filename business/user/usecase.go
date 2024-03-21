@@ -3,11 +3,13 @@ package users
 import (
 	"errors"
 	"fmt"
+	"vanilla-florist/app/middleware"
 	"vanilla-florist/helpers"
 )
 
 type UserUseCase struct {
 	repo UserRepoInterface
+	jwt  middleware.ConfigJWT
 }
 
 func NewUseCase(userRepo UserRepoInterface) UserUseCaseInterface {
@@ -63,6 +65,8 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 	if match != true {
 		return User{}, errors.New("Password doesn't match")
 	}
+
+	userRepo.Token = userUseCase.jwt.GenerateToken(user.Id)
 
 	return userRepo, nil
 }
