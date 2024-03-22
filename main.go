@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"vanilla-florist/app/middleware"
 	"vanilla-florist/helpers"
 
 	userUsecase "vanilla-florist/business/user"
@@ -31,15 +32,18 @@ func main() {
 	fmt.Println("Connected!")
 
 	userRepoInterface := userRepo.NewUserRepository(db)
-	userUseCaseInterface := userUsecase.NewUseCase(userRepoInterface)
+	jwtConf := middleware.ConfigJWT{}
+	userUseCaseInterface := userUsecase.NewUseCase(userRepoInterface, jwtConf)
 	userControllerInterface := userController.NewUserController(userUseCaseInterface)
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/user/signup", userControllerInterface.SignUp)
 	r.HandleFunc("/user/login", userControllerInterface.Login)
-	r.HandleFunc("/user/edit/{id}", userControllerInterface.EditUser)
-	r.HandleFunc("/user/delete/{id}", userControllerInterface.DeleteUser)
+
+	// Protected routes using RequireAuth middleware
+	r.HandleFunc("/user/edit/{id}", middleware.RequireAuth(userControllerInterface.EditUser, jwtConf))
+	r.HandleFunc("/user/delete/{id}", middleware.RequireAuth(userControllerInterface.DeleteUser, jwtConf))
 
 	// listen port
 	err = http.ListenAndServe(":3000", r)

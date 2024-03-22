@@ -1,11 +1,16 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"time"
+
 	"vanilla-florist/utils"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	users "vanilla-florist/business/user"
 )
 
 type JwtCustomClaims struct {
@@ -23,6 +28,10 @@ type JWTConfig struct {
 	Claims                  *JwtCustomClaims
 	SigningKey              []byte
 	ErrorHandlerWithContext func(error, http.ResponseWriter) error
+}
+
+type GeneratorToken interface {
+	GenerateToken(userId int) string
 }
 
 // Define a function to initialize JWTConfig
@@ -64,4 +73,86 @@ func GetUserId(token *jwt.Token) int {
 		return claims.UserId
 	}
 	return 0
+}
+
+func verifyToken(tokenString string, jwtConf ConfigJWT, c http.ResponseWriter) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtConf.SecretJWT), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		utils.ReturnErrorResponse(c, http.StatusForbidden, "Token is invalid")
+		return nil, nil
+	}
+
+	return token, nil
+}
+
+// Auth for private routes
+func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT) http.HandlerFunc {
+	return func(c http.ResponseWriter, r *http.Request) {
+		// Get the token from header
+		c.Header().Set("Content-Type", "application/json")
+		tokenString := r.Header.Get("Authorization")
+
+		if tokenString == "" {
+			c.WriteHeader(http.StatusUnauthorized)
+			utils.ReturnErrorResponse(c, http.StatusForbidden, "Unauthorize")
+			return
+		}
+
+		tokenString = tokenString[len("Bearer "):]
+
+		// Verify token
+		token, err := verifyToken(tokenString, jwtConf, c)
+		if err != nil {
+			c.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(c, "Invalid token")
+			return
+		}
+
+		// Check the expiry date
+		claims, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok {
+			http.Error(c, "Failed to extract claims", http.StatusUnauthorized)
+			return
+		}
+
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			http.Error(c, "Internal Server Error", http.StatusUnauthorized)
+			return
+		}
+
+		// Find the user
+		// Access the "subs" claim and convert it to int
+		subsClaim, ok := claims["subs"].(float64)
+
+		if !ok {
+			fmt.Println("subs claim is not a valid float64")
+			return
+		}
+
+		// Convert subsClaim to int
+		subsInt := int(subsClaim)
+
+		userUseCase := &users.UserUseCase{}
+
+		user, err := userUseCase.FindUser(subsInt)
+
+		if err != nil {
+			http.Error(c, "Failed to fetch user data", http.StatusInternalServerError)
+			return
+		}
+
+		// Attach the user to the request context
+		ctx := context.WithValue(r.Context(), "user", user)
+
+		// Pass the updated context to the next handler
+		next.ServeHTTP(c, r.WithContext(ctx))
+	}
 }

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -43,7 +43,7 @@ func (controller *UserController) SignUp(res http.ResponseWriter, req *http.Requ
 	var userSignup request.UserEdit
 
 	// Read the request body
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 
 	if err != nil {
 		// Handle error
@@ -57,7 +57,7 @@ func (controller *UserController) SignUp(res http.ResponseWriter, req *http.Requ
 	}
 
 	// Create a new io.ReadCloser with the same content
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// parse the user data into json format
 	err = json.NewDecoder(req.Body).Decode(&userSignup)
@@ -114,7 +114,7 @@ func (controller *UserController) Login(res http.ResponseWriter, req *http.Reque
 	var userLogin request.UserLogin
 
 	// Read the request body
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 
 	if err != nil {
 		// Handle error
@@ -128,7 +128,7 @@ func (controller *UserController) Login(res http.ResponseWriter, req *http.Reque
 	}
 
 	// Create a new io.ReadCloser with the same content
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// parse the user data into json format
 	err = json.NewDecoder(req.Body).Decode(&userLogin)
@@ -187,7 +187,7 @@ func (controller *UserController) EditUser(res http.ResponseWriter, req *http.Re
 	var userEdit request.UserEdit
 
 	// Read the request body
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 
 	if err != nil {
 		// Handle error
@@ -201,7 +201,7 @@ func (controller *UserController) EditUser(res http.ResponseWriter, req *http.Re
 	}
 
 	// Create a new io.ReadCloser with the same content
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// parse the user data into json format
 	err = json.NewDecoder(req.Body).Decode(&userEdit)

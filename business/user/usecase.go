@@ -3,18 +3,22 @@ package users
 import (
 	"errors"
 	"fmt"
-	"vanilla-florist/app/middleware"
 	"vanilla-florist/helpers"
 )
 
-type UserUseCase struct {
-	repo UserRepoInterface
-	jwt  middleware.ConfigJWT
+type GeneratorToken interface {
+	GenerateToken(userId int) string
 }
 
-func NewUseCase(userRepo UserRepoInterface) UserUseCaseInterface {
+type UserUseCase struct {
+	repo UserRepoInterface
+	jwt  GeneratorToken
+}
+
+func NewUseCase(userRepo UserRepoInterface, tokenGenerator GeneratorToken) UserUseCaseInterface {
 	return &UserUseCase{
 		repo: userRepo,
+		jwt:  tokenGenerator,
 	}
 }
 
@@ -106,6 +110,16 @@ func (userUseCase *UserUseCase) DeleteUser(id int) (User, error) {
 	}
 
 	userRepo, err := userUseCase.repo.DeleteUser(id)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	return userRepo, nil
+}
+
+func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
+	userRepo, err := userUseCase.repo.FindUser(id)
 
 	if err != nil {
 		return User{}, err
