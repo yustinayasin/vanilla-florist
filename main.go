@@ -17,6 +17,13 @@ import (
 )
 
 func main() {
+	// Load configuration from config.json
+	config, err := middleware.LoadConfig("config.json")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := helpers.NewDatabase()
 
 	if err != nil {
@@ -32,7 +39,10 @@ func main() {
 	fmt.Println("Connected!")
 
 	userRepoInterface := userRepo.NewUserRepository(db)
-	jwtConf := middleware.ConfigJWT{}
+	jwtConf := middleware.ConfigJWT{
+		SecretJWT:       config.SecretJWT,
+		ExpiresDuration: config.ExpiresDuration,
+	}
 	userUseCaseInterface := userUsecase.NewUseCase(userRepoInterface, jwtConf)
 	userControllerInterface := userController.NewUserController(userUseCaseInterface)
 
@@ -42,8 +52,8 @@ func main() {
 	r.HandleFunc("/user/login", userControllerInterface.Login)
 
 	// Protected routes using RequireAuth middleware
-	r.HandleFunc("/user/edit/{id}", middleware.RequireAuth(userControllerInterface.EditUser, jwtConf))
-	r.HandleFunc("/user/delete/{id}", middleware.RequireAuth(userControllerInterface.DeleteUser, jwtConf))
+	r.HandleFunc("/user/edit/{id}", middleware.RequireAuth(userControllerInterface.EditUser, jwtConf, userRepoInterface))
+	r.HandleFunc("/user/delete/{id}", middleware.RequireAuth(userControllerInterface.DeleteUser, jwtConf, userRepoInterface))
 
 	// listen port
 	err = http.ListenAndServe(":3000", r)

@@ -64,11 +64,11 @@ func (repo *UserRepository) Login(user users.User) (users.User, error) {
 	row := db.DB.QueryRow("SELECT * FROM users WHERE email = $1", user.Email)
 
 	//scan jumlah kolom harus sama dan urut
-	if err := row.Scan(&userDB.Name, &userDB.Email, &userDB.Password, &userDB.Id); err != nil {
+	if err := row.Scan(&userDB.Id, &userDB.Name, &userDB.Email, &userDB.Password); err != nil {
 		if err == sql.ErrNoRows {
 			return users.User{}, errors.New("User not found")
 		}
-		return users.User{}, errors.New("Error in database")
+		return users.User{}, errors.New("error in database")
 	}
 
 	return userDB.ToUsecase(), nil
@@ -143,13 +143,13 @@ func (repo *UserRepository) FindUser(id int) (users.User, error) {
 	}
 
 	if db == nil {
-		fmt.Println("Database connection is nil")
 		return users.User{}, errors.New("database connection is nil")
 	}
 
 	err = db.DB.QueryRow("SELECT id, name, email FROM users WHERE id = $1", id).Scan(&newUser.Id, &newUser.Name, &newUser.Email)
 
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 

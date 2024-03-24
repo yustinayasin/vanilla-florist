@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"vanilla-florist/utils"
@@ -19,8 +21,8 @@ type JwtCustomClaims struct {
 }
 
 type ConfigJWT struct {
-	SecretJWT       string //ambil dari config json
-	ExpiresDuration int
+	SecretJWT       string `json:"secret"`
+	ExpiresDuration int    `json:"expired"`
 }
 
 // Define JWTConfig struct to hold JWT configuration
@@ -51,7 +53,7 @@ func (configJwt ConfigJWT) GenerateToken(userId int) string {
 	claims := JwtCustomClaims{
 		userId,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(int64(configJwt.ExpiresDuration)))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Minute * time.Duration(int64(configJwt.ExpiresDuration)))),
 		},
 	}
 
@@ -76,14 +78,22 @@ func GetUserId(token *jwt.Token) int {
 }
 
 func verifyToken(tokenString string, jwtConf ConfigJWT, c http.ResponseWriter) (*jwt.Token, error) {
+	// Parse token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Check signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Return the signing key
 		return []byte(jwtConf.SecretJWT), nil
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to parse token: %v", err)
 	}
 
+	// Validate token
 	if !token.Valid {
 		utils.ReturnErrorResponse(c, http.StatusForbidden, "Token is invalid")
 		return nil, nil
@@ -93,7 +103,7 @@ func verifyToken(tokenString string, jwtConf ConfigJWT, c http.ResponseWriter) (
 }
 
 // Auth for private routes
-func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT) http.HandlerFunc {
+func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT, userRepoInterface users.UserRepoInterface) http.HandlerFunc {
 	return func(c http.ResponseWriter, r *http.Request) {
 		// Get the token from header
 		c.Header().Set("Content-Type", "application/json")
@@ -130,7 +140,7 @@ func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT) http.HandlerFunc {
 
 		// Find the user
 		// Access the "subs" claim and convert it to int
-		subsClaim, ok := claims["subs"].(float64)
+		subsClaim, ok := claims["id"].(float64)
 
 		if !ok {
 			fmt.Println("subs claim is not a valid float64")
@@ -140,11 +150,21 @@ func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT) http.HandlerFunc {
 		// Convert subsClaim to int
 		subsInt := int(subsClaim)
 
-		userUseCase := &users.UserUseCase{}
+		userUseCase := &users.UserUseCase{
+			Repo: userRepoInterface,
+			Jwt:  jwtConf,
+		}
+
+		// Ensure userUseCase is not nil before calling methods on it
+		if userUseCase == nil {
+			fmt.Println("userUseCase is nil")
+			return
+		}
 
 		user, err := userUseCase.FindUser(subsInt)
 
 		if err != nil {
+			fmt.Println(err)
 			http.Error(c, "Failed to fetch user data", http.StatusInternalServerError)
 			return
 		}
@@ -155,4 +175,23 @@ func RequireAuth(next http.HandlerFunc, jwtConf ConfigJWT) http.HandlerFunc {
 		// Pass the updated context to the next handler
 		next.ServeHTTP(c, r.WithContext(ctx))
 	}
+}
+
+func LoadConfig(filename string) (ConfigJWT, error) {
+	var config ConfigJWT
+
+	// Read the contents of the config file
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return ConfigJWT{}, err
+	}
+
+	// Unmarshal JSON data into ConfigJWT struct
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return ConfigJWT{}, err
+	}
+
+	return config, nil
 }

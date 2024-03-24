@@ -3,7 +3,6 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -123,7 +122,7 @@ func (controller *UserController) Login(res http.ResponseWriter, req *http.Reque
 		"message": "Error read request body",
 		}`)
 
-		utils.ReturnJsonResponse(res, http.StatusMethodNotAllowed, HandlerMessage)
+		utils.ReturnJsonResponse(res, http.StatusBadRequest, HandlerMessage)
 		return
 	}
 
@@ -147,7 +146,7 @@ func (controller *UserController) Login(res http.ResponseWriter, req *http.Reque
 	//defer ensure req.Body.Close() will be executed after the AddMovie or schedule a function
 	defer req.Body.Close()
 
-	_, errRepo := controller.usecase.Login(*userLogin.ToUsecase())
+	user, errRepo := controller.usecase.Login(*userLogin.ToUsecase())
 
 	if errRepo != nil {
 		HandlerMessage := []byte(`{
@@ -162,9 +161,10 @@ func (controller *UserController) Login(res http.ResponseWriter, req *http.Reque
 	HandlerMessage := []byte(`{
 		"success": success,
 		"message": "Login success!",
+		"token": ` + user.Token + `
 	}`)
 
-	utils.ReturnJsonResponse(res, http.StatusInternalServerError, HandlerMessage)
+	utils.ReturnJsonResponse(res, http.StatusOK, HandlerMessage)
 	return
 }
 
@@ -230,7 +230,6 @@ func (controller *UserController) EditUser(res http.ResponseWriter, req *http.Re
 				"success": false,
 				"message": "Error in repo",
 			}`)
-		fmt.Println(errRepo)
 		utils.ReturnJsonResponse(res, http.StatusCreated, HandlerMessage)
 		return
 	}

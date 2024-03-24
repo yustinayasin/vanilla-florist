@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"fmt"
 	"vanilla-florist/helpers"
 )
 
@@ -11,14 +10,14 @@ type GeneratorToken interface {
 }
 
 type UserUseCase struct {
-	repo UserRepoInterface
-	jwt  GeneratorToken
+	Repo UserRepoInterface
+	Jwt  GeneratorToken
 }
 
 func NewUseCase(userRepo UserRepoInterface, tokenGenerator GeneratorToken) UserUseCaseInterface {
 	return &UserUseCase{
-		repo: userRepo,
-		jwt:  tokenGenerator,
+		Repo: userRepo,
+		Jwt:  tokenGenerator,
 	}
 }
 
@@ -39,7 +38,7 @@ func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
 
 	user.Password = hash
 
-	userRepo, err := userUseCase.repo.SignUp(user)
+	userRepo, err := userUseCase.Repo.SignUp(user)
 
 	if err != nil {
 		return User{}, err
@@ -57,10 +56,9 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 		return User{}, errors.New("Password cannot be empty")
 	}
 
-	userRepo, err := userUseCase.repo.Login(user)
+	userRepo, err := userUseCase.Repo.Login(user)
 
 	if err != nil {
-		fmt.Println(err)
 		return User{}, err
 	}
 
@@ -70,7 +68,7 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 		return User{}, errors.New("Password doesn't match")
 	}
 
-	userRepo.Token = userUseCase.jwt.GenerateToken(user.Id)
+	userRepo.Token = userUseCase.Jwt.GenerateToken(userRepo.Id)
 
 	return userRepo, nil
 }
@@ -95,7 +93,7 @@ func (userUseCase *UserUseCase) EditUser(user User, id int) (User, error) {
 	hash, _ := helpers.HashPassword(user.Password)
 	user.Password = hash
 
-	userRepo, err := userUseCase.repo.EditUser(user, id)
+	userRepo, err := userUseCase.Repo.EditUser(user, id)
 
 	if err != nil {
 		return User{}, err
@@ -109,7 +107,7 @@ func (userUseCase *UserUseCase) DeleteUser(id int) (User, error) {
 		return User{}, errors.New("User ID empty")
 	}
 
-	userRepo, err := userUseCase.repo.DeleteUser(id)
+	userRepo, err := userUseCase.Repo.DeleteUser(id)
 
 	if err != nil {
 		return User{}, err
@@ -119,7 +117,7 @@ func (userUseCase *UserUseCase) DeleteUser(id int) (User, error) {
 }
 
 func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
-	userRepo, err := userUseCase.repo.FindUser(id)
+	userRepo, err := userUseCase.Repo.FindUser(id)
 
 	if err != nil {
 		return User{}, err
@@ -127,3 +125,35 @@ func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
 
 	return userRepo, nil
 }
+
+// func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
+// 	fmt.Println("Inside FindUser use case function")
+
+// 	// Check if userUseCase or userUseCase.Repo is nil
+// 	if userUseCase == nil {
+// 		return User{}, errors.New("userUseCase is nil")
+// 	}
+// 	if userUseCase.Repo == nil {
+// 		return User{}, errors.New("userUseCase.Repo is nil")
+// 	}
+
+// 	fmt.Println("Before calling FindUser on repository")
+
+// 	// Call FindUser on the repository
+// 	userRepo, err := userUseCase.Repo.FindUser(id)
+
+// 	if err != nil {
+// 		fmt.Println("Error calling FindUser on repository:", err)
+// 		return User{}, err
+// 	}
+
+// 	fmt.Println("User found in repository:", userRepo)
+
+// 	// If userRepo is nil, return an error indicating that the user was not found
+// 	if userRepo == nil {
+// 		fmt.Println("User not found in repository")
+// 		return User{}, errors.New("user not found")
+// 	}
+
+// 	return userRepo, nil
+// }

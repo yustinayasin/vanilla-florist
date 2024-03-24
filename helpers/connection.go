@@ -11,7 +11,7 @@ type Database struct {
 }
 
 func NewDatabase() (*Database, error) {
-	connStr := "user=postgres dbname=florist password=postgres sslmode=disable"
+	connStr := "user=admin dbname=florist password=password sslmode=disable"
 
 	db, err := sql.Open("postgres", connStr)
 

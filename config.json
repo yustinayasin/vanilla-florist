@@ -7,14 +7,12 @@
       "timeout":2
     },
     "database": {
-        "host": "xxx",
+        "host": "localhost",
         "port": "3306",
         "user": "admin",
-        "pass": "pass",
-        "name": "xxx"
+        "pass": "password",
+        "name": "florist"
     },
-    "jwt" : {
-      "secret" : "supersecret12345!@#$%",
-      "expired" : 72
-    }
+    "secret" : "supersecret12345!@#$%",
+    "expired" : 72
 }
