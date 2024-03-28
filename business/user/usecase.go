@@ -23,15 +23,15 @@ func NewUseCase(userRepo UserRepoInterface, tokenGenerator GeneratorToken) UserU
 
 func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
 	if user.Name == "" {
-		return User{}, errors.New("Name empty")
+		return User{}, errors.New("name cannot be empty")
 	}
 
 	if user.Email == "" {
-		return User{}, errors.New("Email empty")
+		return User{}, errors.New("email cannot be empty")
 	}
 
 	if user.Password == "" {
-		return User{}, errors.New("Password empty")
+		return User{}, errors.New("password cannot be empty")
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
@@ -49,11 +49,11 @@ func (userUseCase *UserUseCase) SignUp(user User) (User, error) {
 
 func (userUseCase *UserUseCase) Login(user User) (User, error) {
 	if user.Email == "" {
-		return User{}, errors.New("Email cannot be empty")
+		return User{}, errors.New("email cannot be empty")
 	}
 
 	if user.Password == "" {
-		return User{}, errors.New("Password cannot be empty")
+		return User{}, errors.New("password cannot be empty")
 	}
 
 	userRepo, err := userUseCase.Repo.Login(user)
@@ -65,7 +65,7 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 	match := helpers.CheckPasswordHash(user.Password, userRepo.Password)
 
 	if match != true {
-		return User{}, errors.New("Password doesn't match")
+		return User{}, errors.New("password doesn't match")
 	}
 
 	userRepo.Token = userUseCase.Jwt.GenerateToken(userRepo.Id)
@@ -75,19 +75,19 @@ func (userUseCase *UserUseCase) Login(user User) (User, error) {
 
 func (userUseCase *UserUseCase) EditUser(user User, id int) (User, error) {
 	if id == 0 {
-		return User{}, errors.New("User ID empty")
+		return User{}, errors.New("user ID cannot be empty")
 	}
 
 	if user.Name == "" {
-		return User{}, errors.New("Name empty")
+		return User{}, errors.New("name cannot be empty")
 	}
 
 	if user.Email == "" {
-		return User{}, errors.New("Email empty")
+		return User{}, errors.New("email cannot be empty")
 	}
 
 	if user.Password == "" {
-		return User{}, errors.New("Password empty")
+		return User{}, errors.New("password cannot be empty")
 	}
 
 	hash, _ := helpers.HashPassword(user.Password)
@@ -104,7 +104,7 @@ func (userUseCase *UserUseCase) EditUser(user User, id int) (User, error) {
 
 func (userUseCase *UserUseCase) DeleteUser(id int) (User, error) {
 	if id == 0 {
-		return User{}, errors.New("User ID empty")
+		return User{}, errors.New("user ID cannot be empty")
 	}
 
 	userRepo, err := userUseCase.Repo.DeleteUser(id)
@@ -125,35 +125,3 @@ func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
 
 	return userRepo, nil
 }
-
-// func (userUseCase *UserUseCase) FindUser(id int) (User, error) {
-// 	fmt.Println("Inside FindUser use case function")
-
-// 	// Check if userUseCase or userUseCase.Repo is nil
-// 	if userUseCase == nil {
-// 		return User{}, errors.New("userUseCase is nil")
-// 	}
-// 	if userUseCase.Repo == nil {
-// 		return User{}, errors.New("userUseCase.Repo is nil")
-// 	}
-
-// 	fmt.Println("Before calling FindUser on repository")
-
-// 	// Call FindUser on the repository
-// 	userRepo, err := userUseCase.Repo.FindUser(id)
-
-// 	if err != nil {
-// 		fmt.Println("Error calling FindUser on repository:", err)
-// 		return User{}, err
-// 	}
-
-// 	fmt.Println("User found in repository:", userRepo)
-
-// 	// If userRepo is nil, return an error indicating that the user was not found
-// 	if userRepo == nil {
-// 		fmt.Println("User not found in repository")
-// 		return User{}, errors.New("user not found")
-// 	}
-
-// 	return userRepo, nil
-// }

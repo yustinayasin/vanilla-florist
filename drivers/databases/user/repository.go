@@ -149,8 +149,7 @@ func (repo *UserRepository) FindUser(id int) (users.User, error) {
 	err = db.DB.QueryRow("SELECT id, name, email FROM users WHERE id = $1", id).Scan(&newUser.Id, &newUser.Name, &newUser.Email)
 
 	if err != nil {
-		fmt.Println(err)
-		log.Fatal(err)
+		return users.User{}, errors.New("user not found")
 	}
 
 	return newUser.ToUsecase(), nil
