@@ -11,32 +11,6 @@ import (
 var userUseCaseInterface users.UserUseCaseInterface
 var userDataDummyLogin, userDataDummyEdit users.User
 
-// Custom UserRepository implementation for testing
-type MockUserRepository struct{}
-
-func (r *MockUserRepository) Login(user users.User) (users.User, error) {
-	// Simulate an error in the database
-	return users.User{}, errors.New("error in database")
-}
-
-func (r *MockUserRepository) SignUp(users.User) (users.User, error) {
-	// Simulate an error in the database
-	return users.User{}, errors.New("error in database")
-}
-
-func (r *MockUserRepository) EditUser(users.User) (users.User, error) {
-	// Simulate an error in the database
-	return users.User{}, errors.New("error in database")
-}
-
-func (r *MockUserRepository) DeleteUser(id int) (users.User, error) {
-	// Simulate successful deletion of user with given ID
-	return users.User{
-		Id: id,
-		// Populate other fields as needed
-	}, nil
-}
-
 func setup() {
 	//data mock hasil login
 	userDataDummyLogin = users.User{
