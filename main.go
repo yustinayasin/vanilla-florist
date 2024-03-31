@@ -55,6 +55,14 @@ func main() {
 	r.HandleFunc("/user/edit/{id}", middleware.RequireAuth(userControllerInterface.EditUser, jwtConf, userRepoInterface))
 	r.HandleFunc("/user/delete/{id}", middleware.RequireAuth(userControllerInterface.DeleteUser, jwtConf, userRepoInterface))
 
+	// Set up HTTP header responses
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "private, no-cache")
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	// listen port
 	err = http.ListenAndServe(":3000", r)
 
